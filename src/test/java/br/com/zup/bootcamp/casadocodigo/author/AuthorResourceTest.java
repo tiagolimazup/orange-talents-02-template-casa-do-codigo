@@ -100,7 +100,7 @@ public class AuthorResourceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(asJson(new CreateNewAuthorRequest(author.name, author.email, author.description))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'email')].message").value("email already exists"));
+                .andExpect(jsonPath("$.errors[?(@.field == 'email')].message").value("already exists"));
 
         assertTrue(authors.count() == 1);
     }

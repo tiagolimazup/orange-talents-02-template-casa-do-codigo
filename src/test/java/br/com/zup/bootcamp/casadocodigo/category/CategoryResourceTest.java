@@ -63,7 +63,7 @@ public class CategoryResourceTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(asJson(new CreateNewCategoryRequest(category.name))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'name')].message").value("name already exists"));
+                .andExpect(jsonPath("$.errors[?(@.field == 'name')].message").value("already exists"));
 
         assertTrue(categories.count() == 1);
     }
