@@ -6,19 +6,28 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-class Category {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String name;
+    private String name;
 
     @Deprecated
     Category() {
     }
 
-    Category(String name) {
+    public Category(String name) {
         this.name = name;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
 }

@@ -5,31 +5,31 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-public class UniqueValueValidator implements ConstraintValidator<UniqueValue, String> {
+public class ExistsValidator implements ConstraintValidator<Exists, Object> {
 
     final EntityManager entityManager;
 
     private Class<?> entityType;
     private String field;
 
-    public UniqueValueValidator(EntityManager entityManager) {
+    public ExistsValidator(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
     @Override
-    public void initialize(UniqueValue annotation) {
+    public void initialize(Exists annotation) {
         this.entityType = annotation.entity();
         this.field = annotation.field();
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
         CriteriaQuery<Long> query = new CountQuery(entityManager)
                 .select(entityType)
                 .where(field, value);
 
         long count = entityManager.createQuery(query).getSingleResult();
 
-        return count == 0;
+        return count > 0;
     }
 }

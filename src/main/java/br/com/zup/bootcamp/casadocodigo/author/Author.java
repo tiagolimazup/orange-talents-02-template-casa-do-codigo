@@ -6,25 +6,41 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-class Author {
+public class Author {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
-    String name;
+    private String name;
 
-    String email;
+    private String email;
 
-    String description;
+    private String description;
 
     @Deprecated
     Author() {
     }
 
-    Author(String name, String email, String description) {
+    public Author(String name, String email, String description) {
         this.name = name;
         this.email = email;
         this.description = description;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }

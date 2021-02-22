@@ -33,7 +33,7 @@ public class AuthorResourceTest {
     Authors authors;
 
     @Autowired
-    private ObjectMapper jsonMapper;
+    ObjectMapper jsonMapper;
 
     @Test
     void createNewAuthor() throws Exception {
@@ -98,7 +98,7 @@ public class AuthorResourceTest {
 
         mockMvc.perform(post("/author")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest(author.name, author.email, author.description))))
+                .content(asJson(new CreateNewAuthorRequest(author.getName(), author.getEmail(), author.getDescription()))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[?(@.field == 'email')].message").value("already exists"));
 

@@ -31,7 +31,7 @@ public class CategoryResourceTest {
     Categories categories;
 
     @Autowired
-    private ObjectMapper jsonMapper;
+    ObjectMapper jsonMapper;
 
     @Test
     void createNewCategory() throws Exception {
@@ -61,7 +61,7 @@ public class CategoryResourceTest {
 
         mockMvc.perform(post("/category")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCategoryRequest(category.name))))
+                .content(asJson(new CreateNewCategoryRequest(category.getName()))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[?(@.field == 'name')].message").value("already exists"));
 
