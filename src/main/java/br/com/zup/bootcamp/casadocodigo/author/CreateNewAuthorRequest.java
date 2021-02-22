@@ -14,6 +14,7 @@ class CreateNewAuthorRequest {
 
     @JsonProperty
     @NotBlank
+    @UniqueEmail
     final String email;
 
     @JsonProperty

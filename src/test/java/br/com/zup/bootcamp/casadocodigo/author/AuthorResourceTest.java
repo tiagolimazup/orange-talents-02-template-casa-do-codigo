@@ -91,6 +91,20 @@ public class AuthorResourceTest {
         assertTrue(authors.count() == 0);
     }
 
+    @Test
+    void rejectNewAuthorWhenEmailAlreadyExists() throws Exception {
+        Author author = new Author("Tiago de Freitas Lima", "tiago.lima@zup.com.br", "I'm an author");
+        authors.save(author);
+
+        mockMvc.perform(post("/author")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJson(new CreateNewAuthorRequest(author.name, author.email, author.description))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'email')].message").value("email already exists"));
+
+        assertTrue(authors.count() == 1);
+    }
+
     private String asJson(CreateNewAuthorRequest request) throws JsonProcessingException {
         return jsonMapper.writeValueAsString(request);
     }
