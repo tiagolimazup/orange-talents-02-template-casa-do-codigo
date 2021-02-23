@@ -2,6 +2,7 @@ package br.com.zup.bootcamp.casadocodigo.author;
 
 import br.com.zup.bootcamp.casadocodigo.validation.UniqueValue;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -16,6 +17,7 @@ class CreateNewAuthorRequest {
 
     @JsonProperty
     @NotBlank
+    @Email
     @UniqueValue(entity = Author.class, field = "email")
     final String email;
 

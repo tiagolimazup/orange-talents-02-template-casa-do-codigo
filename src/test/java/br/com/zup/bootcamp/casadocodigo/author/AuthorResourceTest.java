@@ -68,6 +68,17 @@ public class AuthorResourceTest {
     }
 
     @Test
+    void rejectNewAuthorWhenEmailIsInvalid() throws Exception {
+        mockMvc.perform(post("/author")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJson(new CreateNewAuthorRequest("Tiago de Freitas Lima", "whatever", "I'm an author"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'email')]").exists());
+
+        assertTrue(authors.count() == 0);
+    }
+
+    @Test
     void rejectNewAuthorWhenDescriptionIsEmpty() throws Exception {
         mockMvc.perform(post("/author")
                 .contentType(MediaType.APPLICATION_JSON)
