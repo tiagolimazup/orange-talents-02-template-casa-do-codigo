@@ -76,4 +76,19 @@ public class BookResourceTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
     }
+
+    @Test
+    void getDetailsFromOneBook() throws Exception {
+        String expectedJson = jsonMapper.writeValueAsString(new BookDetailsResponse(book));
+
+        mockMvc.perform(get("/book/{id}", book.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenTheBookDoesntExist() throws Exception {
+        mockMvc.perform(get("/book/{id}", 1234))
+                .andExpect(status().isNotFound());
+    }
 }

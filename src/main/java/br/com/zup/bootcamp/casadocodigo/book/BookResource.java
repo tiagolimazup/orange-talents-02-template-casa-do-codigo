@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +25,13 @@ class BookResource {
         return ResponseEntity.ok(books.findAll().stream()
                 .map(BookResponse::new)
                 .collect(toList()));
+    }
+
+    @GetMapping("/{id}")
+    ResponseEntity<BookDetailsResponse> findById(@PathVariable Long id) {
+        return books.findById(id)
+                .map(BookDetailsResponse::new)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
