@@ -1,20 +1,34 @@
 package br.com.zup.bootcamp.casadocodigo.customer;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotBlank;
 
 @Embeddable
 class Address {
 
+    @NotBlank
+    @Column(nullable = false)
     private String street;
 
+    @NotBlank
+    @Column(nullable = false)
     private String complement;
 
+    @NotBlank
+    @Column(nullable = false)
     private String city;
 
+    @NotBlank
+    @Column(nullable = false)
     private String state;
 
+    @NotBlank
+    @Column(nullable = false)
     private String country;
 
+    @NotBlank
+    @Column(nullable = false)
     private String postalCode;
 
     @Deprecated

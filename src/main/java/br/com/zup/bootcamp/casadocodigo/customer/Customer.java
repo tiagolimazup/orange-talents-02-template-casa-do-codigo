@@ -1,10 +1,14 @@
 package br.com.zup.bootcamp.casadocodigo.customer;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Entity
 class Customer {
@@ -13,17 +17,29 @@ class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Email
+    @Column(nullable = false, unique = false)
     private String email;
 
+    @NotBlank
+    @Column(nullable = false)
     private String firstName;
 
+    @NotBlank
+    @Column(nullable = false)
     private String lastName;
 
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String document;
 
+    @NotNull
     @Embedded
     private Address address;
 
+    @NotBlank
+    @Column(nullable = false)
     private String phone;
 
     @Deprecated

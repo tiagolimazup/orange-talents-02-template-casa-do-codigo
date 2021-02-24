@@ -1,8 +1,10 @@
 package br.com.zup.bootcamp.casadocodigo.country;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +17,8 @@ public class Country {
     @Id
     String code;
 
+    @NotBlank
+    @Column(nullable = false)
     String name;
 
     @ElementCollection

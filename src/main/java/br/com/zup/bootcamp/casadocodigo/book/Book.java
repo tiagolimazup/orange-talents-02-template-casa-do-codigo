@@ -3,12 +3,15 @@ package br.com.zup.bootcamp.casadocodigo.book;
 import br.com.zup.bootcamp.casadocodigo.author.Author;
 import br.com.zup.bootcamp.casadocodigo.category.Category;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,26 +22,43 @@ class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String title;
 
+    @NotBlank
+    @Column(nullable = false, unique = true, length = 500)
     private String about;
 
     @Lob
     private String summary;
 
+    @NotNull
+    @Column(nullable = false)
     private BigDecimal price;
 
-    private int pages;
+    @NotNull
+    @Column(nullable = false)
+    private Integer pages;
 
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String isbn;
 
+    @NotNull
+    @Column(nullable = false)
     private LocalDate publishedAt;
 
+    @NotNull
     @ManyToOne
     private Category category;
 
+    @NotNull
     @ManyToOne
     private Author author;
+
+    @Deprecated
+    Book() { }
 
     private Book(String title, String about, String summary, BigDecimal price, int pages, String isbn, LocalDate publishedAt, Category category, Author author) {
         this.title = title;
