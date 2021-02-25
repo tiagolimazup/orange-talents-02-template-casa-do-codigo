@@ -20,7 +20,7 @@ class CustomerResource {
 
     @PostMapping
     ResponseEntity<Void> create(@Valid @RequestBody CreateNewCustomerRequest request) {
-        customers.save(request.newCustomer());
+        customers.save(request.toCustomer());
         return ResponseEntity.ok().build();
     }
 }

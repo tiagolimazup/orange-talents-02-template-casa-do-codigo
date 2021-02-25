@@ -33,7 +33,7 @@ class CreateNewAuthorRequest {
         this.description = description;
     }
 
-    public Author newAuthor() {
+    public Author toAuthor() {
         return new Author(name, email, description);
     }
 }

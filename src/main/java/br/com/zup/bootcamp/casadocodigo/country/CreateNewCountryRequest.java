@@ -26,7 +26,7 @@ class CreateNewCountryRequest {
         this.name = name;
     }
 
-    Country newCountry() {
+    Country toCountry() {
         return new Country(code.toUpperCase(), name);
     }
 }

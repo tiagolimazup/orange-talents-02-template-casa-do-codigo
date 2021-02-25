@@ -22,7 +22,7 @@ class AuthorResource {
 
     @PostMapping
     ResponseEntity<Void> createNewAuthor(@Valid @RequestBody CreateNewAuthorRequest request) {
-        authors.save(request.newAuthor());
+        authors.save(request.toAuthor());
         return ok().build();
     }
 }

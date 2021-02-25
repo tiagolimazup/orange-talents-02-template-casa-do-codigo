@@ -22,7 +22,7 @@ class CheckStateCountryValidator implements ConstraintValidator<CheckStateCountr
     public boolean isValid(CustomerAddressRequest request, ConstraintValidatorContext context) {
         return Optional.ofNullable(request.getCountry())
                 .flatMap(countries::findById)
-                .map(country -> country.hasState(request.getState()))
+                .map(country -> (request.getState() != null && country.hasState(request.getState())) || !country.hasStates())
                 .orElse(false);
     }
 }

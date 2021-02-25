@@ -1,6 +1,15 @@
 package br.com.zup.bootcamp.casadocodigo.category;
 
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,29 +52,62 @@ public class CategoryResourceTest {
         assertTrue(categories.exists(Example.of(new Category("Software Engineering"))));
     }
 
-    @Test
-    void rejectNewCategoryWhenNameIsEmpty() throws Exception {
-        mockMvc.perform(post("/category")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCategoryRequest(null))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'name')]").exists());
+    @Nested
+    class Restrictions {
 
-        assertTrue(categories.count() == 0);
+        @ParameterizedTest(name = "[{index}] {0}")
+        @ArgumentsSource(CreateNewCategoryRestrictionsArguments.class)
+        @DisplayName("reject a new category when:")
+        void rejectNewCategoryWhen(String title, CreateNewCategoryRequest request, String jsonPath, String expectedMessage) throws Exception {
+            mockMvc.perform(post("/category")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(asJson(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath(jsonPath).value(expectedMessage));
+
+            assertTrue(categories.count() == 0);
+        }
+
+        @Nested
+        class WhenCategoryAlreadyExists {
+
+            @ParameterizedTest(name = "[{index}] {0}")
+            @ArgumentsSource(WhenCategoryAlreadyExistsArguments.class)
+            @DisplayName("when category already exists")
+            void rejectNewCategoryWhen(String title, Category category, CreateNewCategoryRequest request, String jsonPath, String expectedMessage) throws Exception {
+                categories.saveAndFlush(category);
+
+                mockMvc.perform(post("/category")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(request)))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath(jsonPath).value(expectedMessage));
+
+                assertTrue(categories.count() == 1);
+            }
+        }
     }
 
-    @Test
-    void rejectNewCategoryWhenNameAlreadyExists() throws Exception {
-        Category category = new Category("Software Engineering");
-        categories.save(category);
+    static class CreateNewCategoryRestrictionsArguments implements ArgumentsProvider {
 
-        mockMvc.perform(post("/category")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCategoryRequest(category.getName()))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'name')].message").value("already exists"));
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            CreateNewCategoryRequest request = new CreateNewCategoryRequest(null);
 
-        assertTrue(categories.count() == 1);
+            return Stream.of(Arguments.of("name is empty", request, "$.errors[?(@.field == 'name')].message", "must not be blank"));
+        }
+    }
+
+    static class WhenCategoryAlreadyExistsArguments implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            Category category = new Category("Software Engineering");
+            CreateNewCategoryRequest request = new CreateNewCategoryRequest(category.getName());
+
+            return Stream.of(Arguments.of("name already exists", category, request, "$.errors[?(@.field == 'name')].message",
+                    "already exists"));
+        }
     }
 
     private String asJson(CreateNewCategoryRequest request) throws JsonProcessingException {

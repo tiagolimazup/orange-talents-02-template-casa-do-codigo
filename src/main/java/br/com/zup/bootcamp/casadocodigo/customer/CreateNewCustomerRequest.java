@@ -14,29 +14,29 @@ class CreateNewCustomerRequest {
     @NotBlank
     @Email
     @UniqueValue(entity = Customer.class, field = "email")
-    final String email;
+    private final String email;
 
     @JsonProperty
     @NotBlank
-    final String firstName;
+    private final String firstName;
 
     @JsonProperty
     @NotBlank
-    final String lastName;
+    private final String lastName;
 
     @JsonProperty
     @NotBlank
     @CPFOrCNPJ
     @UniqueValue(entity = Customer.class, field = "document")
-    final String document;
+    private final String document;
 
     @JsonProperty
     @Valid
-    final CustomerAddressRequest address;
+    private final CustomerAddressRequest address;
 
     @JsonProperty
     @NotBlank
-    final String phone;
+    private final String phone;
 
     CreateNewCustomerRequest(String email, String firstName, String lastName, String document, CustomerAddressRequest address, String phone) {
         this.email = email;
@@ -45,6 +45,10 @@ class CreateNewCustomerRequest {
         this.document = document;
         this.address = address;
         this.phone = phone;
+    }
+
+    String getEmail() {
+        return email;
     }
 
     public CustomerAddressRequest getAddress() {
@@ -57,7 +61,7 @@ class CreateNewCustomerRequest {
                 customer.getPhone());
     }
 
-    Customer newCustomer() {
+    Customer toCustomer() {
         return new Customer.CustomerBuilder()
                 .withEmail(email)
                 .withName(firstName, lastName)

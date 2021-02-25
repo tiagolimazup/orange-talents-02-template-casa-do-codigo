@@ -27,7 +27,7 @@ class CreateNewBookResource {
 
     @PostMapping
     ResponseEntity<?> create(@Valid @RequestBody CreateNewBookRequest request) {
-        return request.newBook(authors, categories)
+        return request.toBook(authors, categories)
                 .map(books::save)
                 .map(b -> ResponseEntity.ok().build())
                 .orElseGet(() -> ResponseEntity.badRequest().build());

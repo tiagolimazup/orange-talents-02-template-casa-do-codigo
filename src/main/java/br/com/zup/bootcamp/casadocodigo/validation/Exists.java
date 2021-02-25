@@ -16,7 +16,7 @@ public @interface Exists {
 
     String field();
 
-    String message() default "this value don't exist";
+    String message() default "this value does not exist";
 
     Class<?>[] groups() default {};
 

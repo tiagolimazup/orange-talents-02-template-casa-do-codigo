@@ -1,6 +1,15 @@
 package br.com.zup.bootcamp.casadocodigo.author;
 
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,78 +54,83 @@ public class AuthorResourceTest {
         assertTrue(authors.exists(Example.of(new Author("Tiago de Freitas Lima", "tiago.lima@zup.com.br", "I'm an author"))));
     }
 
-    @Test
-    void rejectNewAuthorWhenNameIsEmpty() throws Exception {
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest(null, "tiago.lima@zup.com.br", "I'm an author"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'name')]").exists());
+    @Nested
+    class Restrictions {
 
-        assertTrue(authors.count() == 0);
-    }
+        @ParameterizedTest(name = "[{index}] {0}")
+        @ArgumentsSource(CreateNewAuthorRestrictionsArguments.class)
+        @DisplayName("reject a new author when:")
+        void rejectNewAuthorWhen(String title, CreateNewAuthorRequest request, String jsonPath, String expectedMessage) throws Exception {
+            mockMvc.perform(post("/author")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(asJson(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath(jsonPath).value(expectedMessage));
 
-    @Test
-    void rejectNewAuthorWhenEmailIsEmpty() throws Exception {
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest("Tiago de Freitas Lima", null, "I'm an author"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'email')]").exists());
+            assertTrue(authors.count() == 0);
+        }
 
-        assertTrue(authors.count() == 0);
-    }
+        @Nested
+        class WhenAuthorAlreadyExists {
 
-    @Test
-    void rejectNewAuthorWhenEmailIsInvalid() throws Exception {
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest("Tiago de Freitas Lima", "whatever", "I'm an author"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'email')]").exists());
+            @ParameterizedTest(name = "[{index}] {0}")
+            @ArgumentsSource(WhenAuthorAlreadyExistsArguments.class)
+            @DisplayName("when author already exists")
+            void rejectNewAuthorWhen(String title, Author author, CreateNewAuthorRequest request, String jsonPath, String expectedMessage) throws Exception {
+                authors.saveAndFlush(author);
 
-        assertTrue(authors.count() == 0);
-    }
+                mockMvc.perform(post("/author")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(request)))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath(jsonPath).value(expectedMessage));
 
-    @Test
-    void rejectNewAuthorWhenDescriptionIsEmpty() throws Exception {
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest("Tiago de Freitas Lima", "tiago.lima@zup.com.br", null))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'description')]").exists());
-
-        assertTrue(authors.count() == 0);
-    }
-
-    @Test
-    void rejectNewAuthorWhenDescriptionIsGreatherThen400Characters() throws Exception {
-        String description = generate(() -> "a").limit(500).collect(joining());
-
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest("Tiago de Freitas Lima", "tiago.lima@zup.com.br", description))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'description')]").exists());
-
-        assertTrue(authors.count() == 0);
-    }
-
-    @Test
-    void rejectNewAuthorWhenEmailAlreadyExists() throws Exception {
-        Author author = new Author("Tiago de Freitas Lima", "tiago.lima@zup.com.br", "I'm an author");
-        authors.save(author);
-
-        mockMvc.perform(post("/author")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewAuthorRequest(author.getName(), author.getEmail(), author.getDescription()))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'email')].message").value("already exists"));
-
-        assertTrue(authors.count() == 1);
+                assertTrue(authors.count() == 1);
+            }
+        }
     }
 
     private String asJson(CreateNewAuthorRequest request) throws JsonProcessingException {
         return jsonMapper.writeValueAsString(request);
+    }
+
+    static class CreateNewAuthorRestrictionsArguments implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            CreateNewAuthorRequest request = new CreateNewAuthorRequest(null, null, null);
+
+            return Stream.of(
+                    Arguments.of("name is empty", request, "$.errors[?(@.field == 'name')].message", "must not be blank"),
+                    Arguments.of("email is empty", request, "$.errors[?(@.field == 'email')].message", "must not be blank"),
+                    Arguments.of("description is empty", request, "$.errors[?(@.field == 'description')].message", "must not be blank"),
+
+                    Arguments.of("email is invalid", requestWithInvalidEmail(),
+                            "$.errors[?(@.field == 'email')].message", "must be a well-formed email address"),
+                    Arguments.of("description is greather than 400 characters", requestWithLargeDescription(),
+                            "$.errors[?(@.field == 'description')].message", "size must be between 0 and 400"));
+        }
+
+        private CreateNewAuthorRequest requestWithInvalidEmail() {
+            return new CreateNewAuthorRequest(null, "whatever@", null);
+        }
+
+        private CreateNewAuthorRequest requestWithLargeDescription() {
+            String description = generate(() -> "a").limit(500).collect(joining());
+            return new CreateNewAuthorRequest(null, null, description);
+        }
+    }
+
+    static class WhenAuthorAlreadyExistsArguments implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            CreateNewAuthorRequest request = new CreateNewAuthorRequest("Tiago de Freitas Lima", "tiago.lima@zup.com.br", "I'm an author");
+
+            Author author = request.toAuthor();
+
+            return Stream.of(Arguments.of("email already exists", author, request, "$.errors[?(@.field == 'email')].message",
+                    "already exists"));
+        }
     }
 }

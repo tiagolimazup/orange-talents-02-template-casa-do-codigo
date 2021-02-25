@@ -20,7 +20,7 @@ class CountryResource {
 
     @PostMapping
     ResponseEntity<Void> create(@Valid @RequestBody CreateNewCountryRequest request) {
-        countries.save(request.newCountry());
+        countries.save(request.toCountry());
         return ResponseEntity.ok().build();
     }
 }

@@ -19,7 +19,7 @@ class CreateNewCategoryRequest {
         this.name = name;
     }
 
-    Category newCategory() {
+    Category toCategory() {
         return new Category(name);
     }
 }

@@ -20,7 +20,7 @@ class CategoryResource {
 
     @PostMapping
     ResponseEntity<Void> createNewCategory(@Valid @RequestBody CreateNewCategoryRequest request) {
-        categories.save(request.newCategory());
+        categories.save(request.toCategory());
         return ResponseEntity.ok().build();
     }
 }

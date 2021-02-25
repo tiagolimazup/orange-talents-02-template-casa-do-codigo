@@ -25,45 +25,45 @@ class CreateNewBookRequest {
     @JsonProperty
     @NotBlank
     @UniqueValue(entity = Book.class, field = "title")
-    final String title;
+    private final String title;
 
     @JsonProperty
     @NotBlank
     @Size(max = 500)
-    final String about;
+    private final String about;
 
     @JsonProperty
-    final String summary;
+    private final String summary;
 
     @JsonProperty
     @NotNull
     @Min(20)
-    final BigDecimal price;
+    private final BigDecimal price;
 
     @JsonProperty
     @NotNull
     @Min(100)
-    final Integer pages;
+    private final Integer pages;
 
     @JsonProperty
     @NotBlank
     @UniqueValue(entity = Book.class, field = "isbn")
-    final String isbn;
+    private final String isbn;
 
     @JsonProperty
     @NotNull
     @Future
-    final LocalDate publishedAt;
+    private final LocalDate publishedAt;
 
     @JsonProperty
     @NotNull
     @Exists(entity = Category.class, field = "id")
-    final Long categoryId;
+    private final Long categoryId;
 
     @JsonProperty
     @NotNull
     @Exists(entity = Author.class, field = "id")
-    final Long authorId;
+    private final Long authorId;
 
     @JsonCreator
     CreateNewBookRequest(String title, String about, String summary, BigDecimal price, Integer pages, String isbn,
@@ -79,7 +79,23 @@ class CreateNewBookRequest {
         this.authorId = authorId;
     }
 
-    Optional<Book> newBook(Authors authors, Categories categories) {
+    CreateNewBookRequest(Book book) {
+        this(book.getTitle(),
+                book.getAbout(),
+                book.getSummary(),
+                book.getPrice(),
+                book.getPages(),
+                book.getIsbn(),
+                book.getPublishedAt(),
+                book.getCategory().getId(),
+                book.getAuthor().getId());
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    Optional<Book> toBook(Authors authors, Categories categories) {
         return authors.findById(authorId)
                 .flatMap(author -> categories.findById(categoryId)
                         .map(category -> new BookBuilder()

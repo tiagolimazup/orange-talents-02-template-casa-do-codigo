@@ -1,6 +1,15 @@
 package br.com.zup.bootcamp.casadocodigo.country;
 
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,52 +52,68 @@ public class CountryResourceTest {
         assertTrue(countries.exists(Example.of(new Country("BR", "Brazil"))));
     }
 
-    @Test
-    void rejectNewCountryWhenCodeIsEmpty() throws Exception {
-        mockMvc.perform(post("/country")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCountryRequest(null, "Brazil"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'code')]").exists());
+    @Nested
+    class Restrictions {
 
-        assertTrue(countries.count() == 0);
+        @ParameterizedTest(name = "[{index}] {0}")
+        @ArgumentsSource(CreateNewCountryRestrictionsArguments.class)
+        @DisplayName("reject a new country when:")
+        void rejectNewCountryWhen(String title, CreateNewCountryRequest request, String jsonPath, String expectedMessage) throws Exception {
+            mockMvc.perform(post("/country")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(asJson(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath(jsonPath).value(expectedMessage));
+
+            assertTrue(countries.count() == 0);
+        }
+
+        @Nested
+        class WhenCountryAlreadyExists {
+
+            @ParameterizedTest(name = "[{index}] {0}")
+            @ArgumentsSource(WhenCountryAlreadyExistsArguments.class)
+            @DisplayName("when author already exists")
+            void rejectNewAuthorWhen(String title, Country country, CreateNewCountryRequest request, String jsonPath, String expectedMessage) throws Exception {
+                countries.saveAndFlush(country);
+
+                mockMvc.perform(post("/country")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJson(request)))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath(jsonPath).value(expectedMessage));
+
+                assertTrue(countries.count() == 1);
+            }
+        }
     }
 
-    @Test
-    void rejectNewCountryWhenCodeIsGreatherThan2Characters() throws Exception {
-        mockMvc.perform(post("/country")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCountryRequest("BRA", "Brazil"))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'code')]").exists());
-        ;
+    static class CreateNewCountryRestrictionsArguments implements ArgumentsProvider {
 
-        assertTrue(countries.count() == 0);
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            CreateNewCountryRequest request = new CreateNewCountryRequest(null, null);
+
+            return Stream.of(
+                    Arguments.of("code is empty", request, "$.errors[?(@.field == 'code')].message", "must not be blank"),
+                    Arguments.of("name is empty", request, "$.errors[?(@.field == 'name')].message", "must not be blank"),
+
+                    Arguments.of("code is greather than 2 characters", new CreateNewCountryRequest("BRA", null),
+                            "$.errors[?(@.field == 'code')].message", "size must be between 2 and 2"));
+        }
     }
 
-    @Test
-    void rejectNewCountryWhenCodeAlreadyExists() throws Exception {
-        Country country = countries.save(new Country("BR", "Brazil"));
+    static class WhenCountryAlreadyExistsArguments implements ArgumentsProvider {
 
-        mockMvc.perform(post("/country")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCountryRequest(country.getCode(), country.getName()))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'code')]").exists());
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            CreateNewCountryRequest request = new CreateNewCountryRequest("BR", "Brazil");
 
-        assertTrue(countries.count() == 1);
-    }
+            Country country = request.toCountry();
 
-    @Test
-    void rejectNewCountryWhenNameIsEmpty() throws Exception {
-        mockMvc.perform(post("/country")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(new CreateNewCountryRequest("BR", null))))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[?(@.field == 'name')]").exists());
-        ;
-
-        assertTrue(countries.count() == 0);
+            return Stream.of(Arguments.of("country code already exists", country, request, "$.errors[?(@.field == 'code')].message",
+                    "already exists"));
+        }
     }
 
     private String asJson(CreateNewCountryRequest request) throws JsonProcessingException {

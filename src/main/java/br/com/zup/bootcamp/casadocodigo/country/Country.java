@@ -50,8 +50,13 @@ public class Country {
         return state != null && states.contains(state);
     }
 
+    public boolean hasStates() {
+        return !states.isEmpty();
+    }
+
     public Country addState(String state) {
         states.add(state);
         return this;
     }
+
 }
